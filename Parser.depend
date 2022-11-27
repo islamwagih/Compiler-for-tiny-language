@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1669574251 source:d:\projects\compiler\parser\main.cpp
+	<cstdio>
+	<cstdlib>
+	<cstring>
+	<vector>
+	<iostream>
+

@@ -546,14 +546,15 @@ TreeNode* newexpr(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
         //if there is no next token then return error
         if(tokenInd->value == tokens.size())
         {
+            cout<<"missing statement after open parentheses '(' \n";
             return nullptr;
         }
         //expand the mathpexr
         TreeNode* node = mathexpr(tokens, tokenInd);
-        tokenInd->value++;
         //if no more tokens or next one is not right paren then return nullptr
         if(tokenInd->value == tokens.size() || !Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[RIGHT_PAREN]))
         {
+            cout<<"missing closing parentheses ')' \n";
             return nullptr;
         }
         //go to next token
@@ -833,8 +834,8 @@ TreeNode* stmtseq(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
     //cout<<"stmtseq\n";
     TreeNode* head = stmt(tokens, tokenInd);
     TreeNode* currTree = head;
-
     if(head == nullptr) return head;
+
     //cases that must end stmtseq
     while
     (
@@ -858,7 +859,6 @@ TreeNode* stmtseq(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
         currTree->sibling = nextTree;
         currTree = nextTree;
     }
-
 
     return head;
 }
@@ -898,7 +898,7 @@ int main()
 
 // todo
 /**
- y = (9+5);
+ y := (9+5); (solved)
  last stmt without semicolon
  left associativity
 **/

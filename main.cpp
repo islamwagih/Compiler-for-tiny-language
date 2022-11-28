@@ -842,6 +842,16 @@ TreeNode* stmtseq(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
     TreeNode* currTree = head;
     if(head == nullptr) return head;
 
+    bool hasSemiColon = false;
+
+    //match a semicolon after first stmt
+    if(Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[SEMI_COLON]))
+    {
+        //skip semicolon
+        tokenInd->value++;
+        hasSemiColon = true;
+    }
+
     //cases that must end stmtseq
     while
     (
@@ -853,17 +863,26 @@ TreeNode* stmtseq(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
     )
     {
         //cout<<"inside stmtseq loop we have "<<tokens[tokenInd->value]->tokenTypeStr<<endl;
-        //match a semicolon then continue
-        if(Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[SEMI_COLON]))
-        {
-            //skip semicolon
-            tokenInd->value++;
-            continue;
-        }
+        if(!hasSemiColon) { cout<<"missing semicolon\n"; break;}
         //start new stmt
         TreeNode* nextTree = stmt(tokens, tokenInd);
         currTree->sibling = nextTree;
         currTree = nextTree;
+
+        //match a semicolon
+        if(Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[SEMI_COLON]))
+        {
+            //skip semicolon
+            tokenInd->value++;
+            hasSemiColon = true;
+        }else{
+            hasSemiColon = false;
+        }
+    }
+
+    if(hasSemiColon)
+    {
+        cout<<"WARNING: last statement should be without a semicolon\n";
     }
 
     return head;
@@ -878,7 +897,7 @@ TreeNode* parser(vector<ScanNode*>& tokens)
     TreeNode* syntaxTreeRoot = stmtseq(tokens, tokenInd);
     if(tokenInd->value < (tokens.size()-1))
     {
-        cout<<"Error code ends before file ends\n";
+        cout<<"Error execution stops before all tokens end\n";
     }
     delete tokenInd;
     return syntaxTreeRoot;
@@ -901,12 +920,5 @@ int main()
 
     return 0;
 }
-
-// todo
-/**
- y := (9+5); (solved)
- last stmt without semicolon
- left associativity (solved)
-**/
 
 

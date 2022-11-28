@@ -677,6 +677,7 @@ TreeNode* readstmt(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
     //if i did not found identifier then error
     if(!Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[ID]))
     {
+        cout<<"read statement without an identifier\n";
         return nullptr;
     }
     //allocate then go to next token
@@ -706,11 +707,11 @@ TreeNode* assignstmt(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
     //can't match assign operator
     if(!Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[ASSIGN]))
     {
+        cout<<"missing assign operator := in assignment statment\n";
         return nullptr;
     }
     //matched the assign operator go to expr token
     tokenInd->value++;
-    //we can check if tokenInd not out of range after each increament #####################################
     node->child[0] = expr(tokens, tokenInd);
     return node;
 }
@@ -737,12 +738,14 @@ TreeNode* repeatstmt(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
         cout<<"missing until in repeat statement\n";
         return nullptr;
     }
+    //skip until token
+    tokenInd->value++;
     //expand expr
     node->child[1] = expr(tokens, tokenInd);
     return node;
 }
 
-// ifstmt -> if exp then stmtseq [ else stmtseq ] end
+// ifstmt -> if expr then stmtseq [ else stmtseq ] end
 TreeNode* ifstmt(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
 {
     //can't match with if reserved word
@@ -788,7 +791,7 @@ TreeNode* ifstmt(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
 TreeNode* stmt(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
 {
     // test the current token
-    TreeNode* node=0;
+    TreeNode* node = nullptr;
     char* str = tokens[tokenInd->value]->tokenTypeStr;
     //cout<<"current to match "<<str<<endl;
     //try to expand the noed
@@ -830,29 +833,32 @@ TreeNode* stmtseq(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
     //cout<<"stmtseq\n";
     TreeNode* head = stmt(tokens, tokenInd);
     TreeNode* currTree = head;
+
+    if(head == nullptr) return head;
     //cases that must end stmtseq
-        while
-        (
-          tokenInd->value < tokens.size() &&
-          !Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[ENDFILE]) &&
-          !Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[END]) &&
-          !Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[ELSE]) &&
-          !Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[UNTIL])
-        )
+    while
+    (
+      tokenInd->value < tokens.size() &&
+      !Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[ENDFILE]) &&
+      !Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[END]) &&
+      !Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[ELSE]) &&
+      !Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[UNTIL])
+    )
+    {
+        //cout<<"inside stmtseq loop we have "<<tokens[tokenInd->value]->tokenTypeStr<<endl;
+        //match a semicolon then continue
+        if(Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[SEMI_COLON]))
         {
-            //cout<<"inside stmtseq loop we have "<<tokens[tokenInd->value]->tokenTypeStr<<endl;
-            //match a semicolon then continue
-            if(Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[SEMI_COLON]))
-            {
-                //skip semicolon
-                tokenInd->value++;
-                continue;
-            }
-            //start new stmt
-            TreeNode* nextTree = stmt(tokens, tokenInd);
-            currTree->sibling = nextTree;
-            currTree = nextTree;
+            //skip semicolon
+            tokenInd->value++;
+            continue;
         }
+        //start new stmt
+        TreeNode* nextTree = stmt(tokens, tokenInd);
+        currTree->sibling = nextTree;
+        currTree = nextTree;
+    }
+
 
     return head;
 }
@@ -876,17 +882,25 @@ int main()
 {
     //get tokens list from the scanner
     vector<ScanNode*> scannerOutput = scanner("input.txt", "output.txt");
+/*
     cout<<"tokes:\n";
     for(int i=0;i<scannerOutput.size();i++)
     {
         cout<<scannerOutput[i]->info<<' '<<scannerOutput[i]->tokenTypeStr<<endl;
     }
     cout<<"endTokens:\n";
-
+*/
     TreeNode* root = parser(scannerOutput);
-    PrintTree(root);
+    if(root != nullptr) { PrintTree(root); }
 
     return 0;
 }
+
+// todo
+/**
+ y = (9+5);
+ last stmt without semicolon
+ left associativity
+**/
 
 

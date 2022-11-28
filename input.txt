@@ -1,11 +1,1 @@
-{ multi line
-Comment 
-}
-
-read x; {another comment}
-read j;
-if 0<x then {do something}
-    x:=x-1
-else 
-    j:=4
-end
+y :=  (9 + 2) ;

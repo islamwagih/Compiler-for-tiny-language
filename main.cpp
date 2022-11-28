@@ -596,17 +596,20 @@ TreeNode* factor(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
 TreeNode* term(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
 {
     TreeNode* node = factor(tokens, tokenInd);
-    char* str = tokens[tokenInd->value]->tokenTypeStr;
-    if(Equals(str, TokenTypeStr[DIVIDE]) || Equals(str, TokenTypeStr[TIMES]))
+    while
+    (
+        Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[DIVIDE]) ||
+        Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[TIMES])
+    )
     {
-        TokenType type = Equals(str, TokenTypeStr[DIVIDE]) ? DIVIDE:TIMES;
+        TokenType type = Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[DIVIDE]) ? DIVIDE:TIMES;
         TreeNode* parent = new TreeNode;
         parent->node_kind = OPER_NODE;
         parent->oper = type;
-        parent->child[1] = node;
+        parent->child[0] = node;
         tokenInd->value++;
-        parent->child[0] = term(tokens, tokenInd);
-        return parent;
+        parent->child[1] = factor(tokens, tokenInd);
+        node = parent;
     }
     return node;
 }
@@ -615,17 +618,20 @@ TreeNode* term(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
 TreeNode* mathexpr(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
 {
     TreeNode* node = term(tokens, tokenInd);
-    char* str = tokens[tokenInd->value]->tokenTypeStr;
-    if(Equals(str, TokenTypeStr[MINUS]) || Equals(str, TokenTypeStr[PLUS]))
+    while
+    (
+        Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[MINUS]) ||
+        Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[PLUS])
+    )
     {
         TreeNode* parent = new TreeNode;
-        TokenType type = Equals(str, TokenTypeStr[MINUS]) ? MINUS:PLUS;
+        TokenType type = Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[MINUS]) ? MINUS:PLUS;
         parent->node_kind = OPER_NODE;
         parent->oper = type;
-        parent->child[1] = node;
+        parent->child[0] = node;
         tokenInd->value++;
-        parent->child[0] = mathexpr(tokens, tokenInd);
-        return parent;
+        parent->child[1] = term(tokens, tokenInd);
+        node = parent;
     }
     return node;
 }
@@ -900,7 +906,7 @@ int main()
 /**
  y := (9+5); (solved)
  last stmt without semicolon
- left associativity
+ left associativity (solved)
 **/
 
 

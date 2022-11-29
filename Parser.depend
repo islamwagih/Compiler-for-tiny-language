@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1669644509 source:d:\projects\compiler\parser\main.cpp
+1669724674 source:d:\projects\compiler\parser\main.cpp
 	<cstdio>
 	<cstdlib>
 	<cstring>

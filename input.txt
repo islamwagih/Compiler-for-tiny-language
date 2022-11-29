@@ -1,11 +1,20 @@
-{ multi line
-Comment 
+{ Sample program
+  in TINY language
+  compute factorial
 }
 
-read x; {another comment}
-read j;
-if 0<x then {do something}
+x := x^2^2 ;
+o := ( 9 + 2 ) ;
+write z;
+read x;
+if 0 < x then {compute only if x>=1}
+    if 2 < z then
+        fact := 5
+     end;
+  fact:=1;
+  repeat
+    fact := fact * x;
     x:=x-1
-else 
-    j:=4
+  until x=0;
+  write fact {output factorial}
 end

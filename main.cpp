@@ -1,3 +1,6 @@
+//islam wagih emam 20190099
+//bassant samer mahmoud 20190133
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -269,11 +272,13 @@ struct ScanNode
 {
     char* info; //code
     char* tokenTypeStr; //token type
-    ScanNode(const char* info, const char* tokenTypeStr)
+    int lineNumber; //line number corresponding to code file
+    ScanNode(const char* info, const char* tokenTypeStr, int lineNumber)
     {
         //reserve memory
         this->info = new char[MAX_TOKEN_LEN];
         this->tokenTypeStr = new char[MAX_TOKEN_LEN];
+        this->lineNumber = lineNumber;
         Copy(this->info, info);
         Copy(this->tokenTypeStr, tokenTypeStr);
     }
@@ -321,7 +326,7 @@ vector<ScanNode*> scanner(const char* inputFile, const char* outputFile)
                 output.Out(" (", false);
                 output.Out(TokenTypeStr[NUM], false);
                 output.Out(")");
-                scanNodes.push_back(new ScanNode(tokenName, TokenTypeStr[NUM]));
+                scanNodes.push_back(new ScanNode(tokenName, TokenTypeStr[NUM], file.cur_line_num));
                 continue;
             }
 
@@ -347,14 +352,14 @@ vector<ScanNode*> scanner(const char* inputFile, const char* outputFile)
                     {
                         isReservedWord = true;
                         output.Out(TokenTypeStr[j], false);
-                        scanNodes.push_back(new ScanNode(tokenName, TokenTypeStr[j]));
+                        scanNodes.push_back(new ScanNode(tokenName, TokenTypeStr[j], file.cur_line_num));
                     }
                 }
                 //if not a reserved word then it's an identifier
                 if(!isReservedWord)
                 {
                     output.Out("ID", false);
-                    scanNodes.push_back(new ScanNode(tokenName, "ID"));
+                    scanNodes.push_back(new ScanNode(tokenName, "ID", file.cur_line_num));
                 }
                 output.Out(")");
                 continue;
@@ -389,7 +394,7 @@ vector<ScanNode*> scanner(const char* inputFile, const char* outputFile)
                 output.Out(" (", false);
                 output.Out(TokenTypeStr[type], false);
                 output.Out(")");
-                if(type != LEFT_BRACE && type != RIGHT_BRACE) scanNodes.push_back(new ScanNode(tokenName, TokenTypeStr[type]));
+                if(type != LEFT_BRACE && type != RIGHT_BRACE) scanNodes.push_back(new ScanNode(tokenName, TokenTypeStr[type], file.cur_line_num));
             }else
             {
                 //skip any space
@@ -419,7 +424,7 @@ vector<ScanNode*> scanner(const char* inputFile, const char* outputFile)
     output.Out(" (", false);
     output.Out(TokenTypeStr[ENDFILE], false);
     output.Out(")");
-    scanNodes.push_back(new ScanNode("EOF", TokenTypeStr[ENDFILE]));
+    scanNodes.push_back(new ScanNode("EOF", TokenTypeStr[ENDFILE], file.cur_line_num));
     return scanNodes;
 }
 
@@ -546,7 +551,7 @@ TreeNode* newexpr(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
         //if there is no next token then return error
         if(tokenInd->value == tokens.size())
         {
-            cout<<"missing statement after open parentheses '(' \n";
+            cout<<"missing statement after open parentheses '(' at line "<<tokens[tokenInd->value]->lineNumber<<'\n';
             return nullptr;
         }
         //expand the mathpexr
@@ -554,7 +559,7 @@ TreeNode* newexpr(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
         //if no more tokens or next one is not right paren then return nullptr
         if(tokenInd->value == tokens.size() || !Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[RIGHT_PAREN]))
         {
-            cout<<"missing closing parentheses ')' \n";
+            cout<<"missing closing parentheses ')' at line "<<tokens[tokenInd->value]->lineNumber<<'\n';
             return nullptr;
         }
         //go to next token
@@ -684,7 +689,7 @@ TreeNode* readstmt(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
     //if i did not found identifier then error
     if(!Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[ID]))
     {
-        cout<<"read statement without an identifier\n";
+        cout<<"read statement without an identifier at line "<<tokens[tokenInd->value]->lineNumber<<'\n';
         return nullptr;
     }
     //allocate then go to next token
@@ -714,7 +719,7 @@ TreeNode* assignstmt(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
     //can't match assign operator
     if(!Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[ASSIGN]))
     {
-        cout<<"missing assign operator := in assignment statment\n";
+        cout<<"missing assign operator := in assignment statment at line "<<tokens[tokenInd->value]->lineNumber<<'\n';
         return nullptr;
     }
     //matched the assign operator go to expr token
@@ -742,7 +747,7 @@ TreeNode* repeatstmt(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
     //can't match with until stmt
     if(!Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[UNTIL]))
     {
-        cout<<"missing until in repeat statement\n";
+        cout<<"missing until in repeat statement at line "<<tokens[tokenInd->value]->lineNumber<<'\n';
         return nullptr;
     }
     //skip until token
@@ -770,7 +775,7 @@ TreeNode* ifstmt(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
     //can't match with then reserved word
     if(!Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[THEN]))
     {
-        cout<<"missing then in if statement\n";
+        cout<<"missing then in if statement at line "<<tokens[tokenInd->value]->lineNumber<<'\n';
         return nullptr;
     }
     tokenInd->value++;
@@ -786,7 +791,7 @@ TreeNode* ifstmt(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
     //can't match with end reserved word
     if(!Equals(tokens[tokenInd->value]->tokenTypeStr, TokenTypeStr[END]))
     {
-        cout<<"missing end in if statement\n";
+        cout<<"missing end in if statement at line "<<tokens[tokenInd->value]->lineNumber<<'\n';
         return nullptr;
     }
     //go to next token skip end
@@ -863,7 +868,8 @@ TreeNode* stmtseq(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
     )
     {
         //cout<<"inside stmtseq loop we have "<<tokens[tokenInd->value]->tokenTypeStr<<endl;
-        if(!hasSemiColon) { cout<<"missing semicolon\n"; break;}
+        //parsing without a semicolon then there is a missing semicolon
+        if(!hasSemiColon) { cout<<"missing semicolon at line "<<tokens[tokenInd->value]->lineNumber-1<<'\n'; return nullptr;}
         //start new stmt
         TreeNode* nextTree = stmt(tokens, tokenInd);
         currTree->sibling = nextTree;
@@ -882,7 +888,8 @@ TreeNode* stmtseq(vector<ScanNode*>& tokens, tokenIndex* tokenInd)
 
     if(hasSemiColon)
     {
-        cout<<"WARNING: last statement should be without a semicolon\n";
+        cout<<"ERROR: last statement should be without a semicolon at line "<<tokens[tokenInd->value]->lineNumber-1<<'\n';
+        return nullptr;
     }
 
     return head;
@@ -897,7 +904,7 @@ TreeNode* parser(vector<ScanNode*>& tokens)
     TreeNode* syntaxTreeRoot = stmtseq(tokens, tokenInd);
     if(tokenInd->value < (tokens.size()-1))
     {
-        cout<<"Error execution stops before all tokens end\n";
+        cout<<"Error execution stops before all tokens end stops at line \n";
     }
     delete tokenInd;
     return syntaxTreeRoot;
@@ -907,16 +914,24 @@ int main()
 {
     //get tokens list from the scanner
     vector<ScanNode*> scannerOutput = scanner("input.txt", "output.txt");
-/*
-    cout<<"tokes:\n";
+
+    //check for error tokens
+    bool parse = true;
     for(int i=0;i<scannerOutput.size();i++)
     {
-        cout<<scannerOutput[i]->info<<' '<<scannerOutput[i]->tokenTypeStr<<endl;
+        if(Equals(scannerOutput[i]->tokenTypeStr, "Error"))
+        {
+            parse = false;
+            cout<<"ERROR: "<<scannerOutput[i]->info<<" is not recognized at line "<<scannerOutput[i]->lineNumber<<'\n';
+            break;
+        }
     }
-    cout<<"endTokens:\n";
-*/
-    TreeNode* root = parser(scannerOutput);
-    if(root != nullptr) { PrintTree(root); }
+
+    if(parse)
+    {
+        TreeNode* root = parser(scannerOutput);
+        if(root != nullptr) { PrintTree(root); }
+    }
 
     return 0;
 }

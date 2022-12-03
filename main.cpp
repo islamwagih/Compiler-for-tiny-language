@@ -904,7 +904,7 @@ TreeNode* parser(vector<ScanNode*>& tokens)
     TreeNode* syntaxTreeRoot = stmtseq(tokens, tokenInd);
     if(tokenInd->value < (tokens.size()-1))
     {
-        cout<<"Error execution stops before all tokens end stops at line \n";
+        cout<<"Error execution stops before all tokens end\n";
     }
     delete tokenInd;
     return syntaxTreeRoot;

@@ -3,18 +3,12 @@
   compute factorial
 }
 
-x := x^2^2 ;
-o := ( 9 + 2 ) ;
-write z;
-read x;
-if 0 < x then {compute only if x>=1}
-    if 2 < z then
-        fact := 5
-     end;
+read x; {input an integer}
+if 0<x then {compute only if x>=1}
   fact:=1;
   repeat
     fact := fact * x;
-    x:=x-1
+    x:=x-1 
   until x=0;
   write fact {output factorial}
 end
